@@ -1,0 +1,28 @@
+cat <<EOF > .gitignore
+# Environnement virtuel
+venv_p11/
+
+# Fichiers système et IDE
+.vscode/
+.DS_Store
+
+# Dossiers de données et de résultats
+data/
+outputs/
+
+# Fichiers temporaires Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+
+# Artefacts de modèles et résultats
+*.parquet
+*.csv
+*.npz
+*.h5
+*.log
+*.png
+EOF
+
