@@ -1,0 +1,45 @@
+# Fichier: docker/docker-compose.yml
+# Place ce fichier dans 2-python/docker/docker-compose.yml
+
+version: '3.8'
+
+services:
+  localstack:
+    container_name: localstack_p11
+    image: localstack/localstack:2.3
+    ports:
+      - "4566:4566"            # LocalStack gateway
+      - "4510-4559:4510-4559"  # Services externes
+    environment:
+      # Services AWS à simuler (on veut juste S3)
+      SERVICES: s3
+      
+      # Configuration réseau
+      DEBUG: 1
+      DOCKER_HOST: unix:///var/run/docker.sock
+      
+      # Persistence (optionnel - garde les données entre redémarrages)
+      PERSISTENCE: 1
+      
+      # Répertoire pour les scripts d'initialisation
+      INIT_SCRIPTS_PATH: /etc/localstack/init/ready.d
+      
+      # Configuration S3 spécifique
+      S3_SKIP_SIGNATURE_VALIDATION: 1
+      
+    volumes:
+      # Monte ton dossier d'init scripts
+      - "./localstack-init:/etc/localstack/init/ready.d"
+      
+      # Persistence des données (optionnel)
+      - "./localstack-data:/var/lib/localstack"
+      
+      # Docker socket pour containers internes
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
