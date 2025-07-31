@@ -1,0 +1,14 @@
+[
+  {
+    "InstanceGroupType": "MASTER",
+    "InstanceCount": 1,
+    "InstanceType": "m5.xlarge",
+    "BidPrice": "0.08"
+  },
+  {
+    "InstanceGroupType": "CORE", 
+    "InstanceCount": 1,
+    "InstanceType": "m5.xlarge",
+    "BidPrice": "0.08"
+  }
+]

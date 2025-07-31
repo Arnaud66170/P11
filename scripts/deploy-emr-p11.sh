@@ -102,8 +102,8 @@ CLUSTER_ID=$(aws emr create-cluster \
     --name "$CLUSTER_NAME" \
     --release-label emr-6.15.0 \
     --instance-groups \
-        InstanceGroupType=MASTER,InstanceCount=1,InstanceType=$MASTER_INSTANCE,BidPrice=0.08 \
-        InstanceGroupType=CORE,InstanceCount=$WORKER_COUNT,InstanceType=$WORKER_INSTANCE,BidPrice=0.08 \
+      'InstanceGroupType=MASTER,InstanceCount=1,InstanceType='$MASTER_INSTANCE',BidPrice=0.08' \
+      'InstanceGroupType=CORE,InstanceCount='$WORKER_COUNT',InstanceType='$WORKER_INSTANCE',BidPrice=0.08' \
     --bootstrap-actions Path=s3://$BUCKET_NAME/bootstrap/bootstrap-emr-2025.sh \
     --ec2-attributes KeyName=$KEY_NAME \
     --service-role EMR_DefaultRole \
@@ -147,3 +147,6 @@ rm -f bootstrap-emr-2025.sh
 echo ""
 echo "⚠️  IMPORTANT: N'oublie pas d'arrêter le cluster après la demo !"
 echo "aws emr terminate-clusters --cluster-ids $CLUSTER_ID --region $REGION"
+
+# Lancement du script, depuis scripts/ :
+# ./deploy-emr-p11.sh
