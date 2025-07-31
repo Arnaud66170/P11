@@ -28,30 +28,4 @@ echo "spark.serializer org.apache.spark.serializer.KryoSerializer" >> /etc/spark
 echo "spark.sql.adaptive.enabled true" >> /etc/spark/conf/spark-defaults.conf
 echo "spark.sql.adaptive.coalescePartitions.enabled true" >> /etc/spark/conf/spark-defaults.conf
 
-# Installation Zeppelin (si pas déjà fait)
-if [ ! -d "/opt/zeppelin" ]; then
-    echo "📓 Installation Zeppelin..."
-    cd /opt
-    sudo wget -q https://archive.apache.org/dist/zeppelin/zeppelin-0.10.1/zeppelin-0.10.1-bin-all.tgz
-    sudo tar -xzf zeppelin-0.10.1-bin-all.tgz
-    sudo mv zeppelin-0.10.1-bin-all zeppelin
-    sudo chown -R hadoop:hadoop zeppelin
-    rm -f zeppelin-0.10.1-bin-all.tgz
-    
-    # Configuration Zeppelin pour écouter sur toutes les interfaces
-    sudo tee /opt/zeppelin/conf/zeppelin-site.xml > /dev/null << 'ZEPPELIN_CONF'
-<?xml version="1.0"?>
-<configuration>
-  <property>
-    <name>zeppelin.server.addr</name>
-    <value>0.0.0.0</value>
-  </property>
-  <property>
-    <name>zeppelin.server.port</name>
-    <value>8080</value>
-  </property>
-</configuration>
-ZEPPELIN_CONF
-fi
-
 echo "✅ Bootstrap terminé avec succès"
