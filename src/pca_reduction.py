@@ -258,32 +258,78 @@ def apply_pca_on_features(spark, df, k=100, features_col="features", output_path
 def plot_variance_curve(variance_data, k_optimal, threshold=0.95, save_path=None):
     """
     Affiche la courbe de variance cumulée avec annotations propres.
-
+    
+    Cette fonction gère  tous les cas de figure
+    
     :param variance_data: liste de tuples (k, var_individuelle, var_cumulée)
     :param k_optimal: entier, nombre de composantes optimales
     :param threshold: seuil de variance cumulée à atteindre (ex: 0.95)
     :param save_path: chemin d'enregistrement (facultatif)
     """
+    if not variance_data:
+        print("❌ Erreur : Aucune donnée de variance fournie")
+        return
+    
     ks = [int(row[0]) for row in variance_data]
     cum_vars = [row[2] for row in variance_data]
 
+    # ✅ CORRECTION : Vérifications approfondies
+    print(f"🔍 Debug - k_optimal: {k_optimal}")
+    print(f"📊 Données disponibles: k de {min(ks)} à {max(ks)} ({len(ks)} points)")
+    
+    # Créer un dictionnaire pour un accès direct k -> variance cumulée
+    k_to_variance = dict(zip(ks, cum_vars))
+    
+    # ✅ CORRECTION : Gestion intelligente du k_optimal non trouvé
+    if k_optimal not in k_to_variance:
+        print(f"⚠️ k_optimal={k_optimal} n'est pas dans les données calculées!")
+        
+        # Stratégie 1 : Chercher le k le plus proche qui atteint le threshold
+        valid_ks_above_threshold = [k for k, var in k_to_variance.items() if var >= threshold]
+        
+        if valid_ks_above_threshold:
+            k_optimal_adjusted = min(valid_ks_above_threshold)
+            print(f"🔧 Utilisation de k={k_optimal_adjusted} (plus petit k atteignant {threshold*100}%)")
+        else:
+            # Stratégie 2 : Prendre le k maximum disponible
+            k_optimal_adjusted = max(ks)
+            print(f"🔧 Fallback sur k={k_optimal_adjusted} (k maximum disponible)")
+            print(f"⚠️ Ce k ne permet d'atteindre que {k_to_variance[k_optimal_adjusted]*100:.2f}% de variance")
+        
+        k_optimal = k_optimal_adjusted
+    
+    # Récupérer la variance correspondante
+    optimal_variance = k_to_variance[k_optimal]
+    print(f"✅ Point optimal utilisé: k={k_optimal}, variance={optimal_variance:.4f} ({optimal_variance*100:.2f}%)")
+    
+    # ✅ Génération du graphique robuste
     plt.figure(figsize=(10, 6))
     plt.plot(ks, cum_vars, marker='o', linestyle='-', color='blue', label='Variance expliquée cumulée')
     plt.axhline(y=threshold, color='red', linestyle='--', label=f'Seuil {int(threshold*100)}%')
     plt.axvline(x=k_optimal, color='green', linestyle='--', label=f'{k_optimal} composantes')
-    plt.scatter(k_optimal, cum_vars[k_optimal-1], color='black')  # point noir sur le point optimal
-    plt.text(k_optimal, cum_vars[k_optimal-1]+0.01, f'{cum_vars[k_optimal-1]*100:.2f}%', ha='center', fontsize=9)
+    
+    # Point optimal mis en evidence
+    plt.scatter(k_optimal, optimal_variance, color='black', s=100, zorder=5)
+    plt.text(k_optimal, optimal_variance + 0.01, f'{optimal_variance*100:.2f}%', 
+             ha='center', fontsize=9, bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8))
 
     plt.xlabel("Nombre de composantes")
     plt.ylabel("Variance expliquée cumulée")
     plt.title("Variance expliquée cumulée par la PCA (Spark)")
-    plt.grid(True)
+    plt.grid(True, alpha=0.3)
+    
+    # Amélioration des axes
     plt.xticks(ks[::max(1, len(ks)//20)])  # espacement dynamique
-    plt.yticks([round(v, 2) for v in cum_vars if round(v, 2) >= 0.5 or v == threshold] + [threshold])
+    plt.ylim(0, 1.05)  # Un peu d'espace au-dessus
     plt.legend()
     plt.tight_layout()
 
     if save_path:
-        plt.savefig(save_path)
+        import os
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"💾 Graphique sauvegardé : {save_path}")
     else:
         plt.show()
+    
+    plt.close()  # ✅ Fermeture explicite pour éviter les fuites mémoire
